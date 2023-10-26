@@ -1,12 +1,12 @@
 <script setup>
 import { ref } from 'vue'
 import { vOnClickOutside } from '@vueuse/components'
-import menus from '../data/data.js'
+import menus from '../data/menu.js'
 
-const showMenu = ref(true);
+const showMenu = ref(false);
 
 const menuActive = ref('');
-const childrenActive = ref('');
+const childActive = ref('');
 const grandsonActive = ref('');
 
 const closeMenu = () => {
@@ -17,8 +17,8 @@ const clickMenu = (key) => {
   menuActive.value = key
 }
 
-const clickChildren = (key) => {
-  childrenActive.value = key
+const clickChild = (key) => {
+  childActive.value = key
 }
 
 const clickGrandson = (key) => {
@@ -37,11 +37,11 @@ const clickGrandson = (key) => {
         <a @click="clickMenu(menu.key)">{{ menu.text }}</a>
 
         <ul v-if="menuActive == menu.key" class="children">
-          <li v-for="children in menu.children" :key="children.key" :class="{ active: childrenActive == children.key }">
-            <a @click="clickChildren(children.key)">{{ children.text }}</a>
+          <li v-for="child in menu.children" :key="child.key" :class="{ active: childActive == child.key }">
+            <a @click="clickChild(child.key)">{{ child.text }}</a>
 
-            <ul v-if="childrenActive == children.key" class="children">
-              <li v-for="grandson in children.children" :key="grandson.key" :class="{ active: grandsonActive == grandson.key }">
+            <ul v-if="childActive == child.key" class="children">
+              <li v-for="grandson in child.children" :key="grandson.key" :class="{ active: grandsonActive == grandson.key }">
                 <a @click="clickGrandson(grandson.key)">{{ grandson.text }}</a>
               </li>
             </ul>
@@ -64,6 +64,7 @@ const clickGrandson = (key) => {
   position: absolute;
   top: 0;
   right: -50%;
+  z-index: 1000;
   width: 50%;
   height: 100vh;
   padding: 1rem 0.75rem;
