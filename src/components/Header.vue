@@ -1,29 +1,46 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { vOnClickOutside } from '@vueuse/components'
-import menus from '../data/menu.js'
+import menu from '../data/menu.js'
 
-const showMenu = ref(false);
+const showMenu = ref(true)
 
-const menuActive = ref('');
-const childActive = ref('');
-const grandsonActive = ref('');
+const menuActive = ref({
+  parent: '',
+  child: '',
+  grandson: '',
+});
 
 const closeMenu = () => {
   showMenu.value = false
 }
 
-const clickMenu = (key) => {
-  menuActive.value = key
+const clickParent = (key) => {
+  menuActive.value.parent = key
+  console.log('menuActive', menuActive.value)
 }
 
 const clickChild = (key) => {
-  childActive.value = key
+  menuActive.value.child = key
+  console.log('menuActive', menuActive.value)
 }
 
 const clickGrandson = (key) => {
-  grandsonActive.value = key
+  menuActive.value.grandson = key
+  console.log('menuActive', menuActive.value)
 }
+
+const menuSelected = ref('')
+
+watch(menuSelected, (newMenuSelected) => {
+  let split = newMenuSelected.split(',')
+  menuActive.value.parent = split[0]
+  menuActive.value.child = split[1]
+  menuActive.value.grandson = split[2]
+
+  console.log('menuSelectedSplit', split)
+  console.log('menuActive', menuActive.value)
+})
 </script>
 
 <template>
@@ -33,15 +50,18 @@ const clickGrandson = (key) => {
 
   <nav class="sidebar" :class="{ show: showMenu }" v-on-click-outside="closeMenu">
     <ul class="menu">
-      <li v-for="menu in menus" :key="menu.key" :class="{ active: menuActive == menu.key }">
-        <a @click="clickMenu(menu.key)">{{ menu.text }}</a>
+      <!-- 第一層 -->
+      <li v-for="parent in menu" :key="parent.key" :class="{ active: menuActive.parent == parent.key }">
+        <a @click="clickParent(parent.key)">{{ parent.text }}</a>
 
-        <ul v-if="menuActive == menu.key" class="children">
-          <li v-for="child in menu.children" :key="child.key" :class="{ active: childActive == child.key }">
+        <!-- 第二層 -->
+        <ul v-if="menuActive.parent == parent.key" class="children">
+          <li v-for="child in parent.children" :key="child.key" :class="{ active: menuActive.child == child.key }">
             <a @click="clickChild(child.key)">{{ child.text }}</a>
 
-            <ul v-if="childActive == child.key" class="children">
-              <li v-for="grandson in child.children" :key="grandson.key" :class="{ active: grandsonActive == grandson.key }">
+            <!-- 第三層 -->
+            <ul v-if="menuActive.child == child.key" class="children">
+              <li v-for="grandson in child.children" :key="grandson.key" :class="{ active: menuActive.grandson == grandson.key }">
                 <a @click="clickGrandson(grandson.key)">{{ grandson.text }}</a>
               </li>
             </ul>
@@ -51,6 +71,27 @@ const clickGrandson = (key) => {
 
       </li>
     </ul>
+
+    <hr>
+
+    <select class="select" v-model="menuSelected">
+      <option disabled value="">請選擇</option>
+      
+      <!-- 第一層 -->
+      <template v-for="parent in menu" :key="parent.key">
+        <option :value="parent.key">{{ parent.text }}</option>
+
+        <!-- 第二層 -->
+        <template v-for="child in parent.children" :key="child.key">
+          <option :value="parent.key+','+child.key">{{ child.text }}</option>
+
+          <!-- 第三層 -->
+          <template v-for="grandson in child.children" :key="grandson.key">
+            <option :value="parent.key+','+child.key+','+grandson.key">{{ grandson.text }}</option>
+          </template>
+        </template>
+      </template>
+    </select>
   </nav>
 </template>
 
@@ -68,7 +109,6 @@ const clickGrandson = (key) => {
   width: 50%;
   height: 100vh;
   padding: 1rem 0.75rem;
-  padding-right: 0;
   background-color: rgba(0,0,0, 0.9);
   overflow-y: auto;
   transition: right 0.3s, opacity 0.3s;
@@ -78,6 +118,7 @@ const clickGrandson = (key) => {
 }
 .menu{
   list-style: none;
+  margin-right: -0.75rem;
   padding: 0;
   >li{
     padding: 0.375rem 0;
@@ -103,5 +144,15 @@ const clickGrandson = (key) => {
       padding: 0;
     }
   }
+}
+.select{
+  width: 100%;
+  padding: 0.25rem;
+  font-size: 18px;
+  outline: 0;
+}
+hr{
+  margin: 1rem 0;
+  border-color: #000;
 }
 </style>
