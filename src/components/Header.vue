@@ -3,31 +3,25 @@ import { ref, watch } from 'vue'
 import { vOnClickOutside } from '@vueuse/components'
 import menu from '../data/menu.js'
 
-const showMenu = ref(true)
+const showMenu = ref(false)
 
 const menuActive = ref({
-  parent: '',
-  child: '',
-  grandson: '',
+  parent: JSON.parse(localStorage.getItem('menuActive'))?.parent,
+  child: JSON.parse(localStorage.getItem('menuActive'))?.child,
+  grandson: JSON.parse(localStorage.getItem('menuActive'))?.grandson,
 });
 
 const closeMenu = () => {
   showMenu.value = false
 }
 
-const clickParent = (key) => {
-  menuActive.value.parent = key
-  console.log('menuActive', menuActive.value)
+const clickMenu = (key, type) => {
+  menuActive.value[type] = key
+  saveMenu()
 }
 
-const clickChild = (key) => {
-  menuActive.value.child = key
-  console.log('menuActive', menuActive.value)
-}
-
-const clickGrandson = (key) => {
-  menuActive.value.grandson = key
-  console.log('menuActive', menuActive.value)
+const saveMenu = () => {
+  localStorage.setItem('menuActive', JSON.stringify(menuActive.value))
 }
 
 const menuSelected = ref('')
@@ -37,9 +31,7 @@ watch(menuSelected, (newMenuSelected) => {
   menuActive.value.parent = split[0]
   menuActive.value.child = split[1]
   menuActive.value.grandson = split[2]
-
-  console.log('menuSelectedSplit', split)
-  console.log('menuActive', menuActive.value)
+  saveMenu()
 })
 </script>
 
@@ -52,17 +44,17 @@ watch(menuSelected, (newMenuSelected) => {
     <ul class="menu">
       <!-- 第一層 -->
       <li v-for="parent in menu" :key="parent.key" :class="{ active: menuActive.parent == parent.key }">
-        <a @click="clickParent(parent.key)">{{ parent.text }}</a>
+        <a @click="clickMenu(parent.key, 'parent')">{{ parent.text }}</a>
 
         <!-- 第二層 -->
         <ul v-if="menuActive.parent == parent.key" class="children">
           <li v-for="child in parent.children" :key="child.key" :class="{ active: menuActive.child == child.key }">
-            <a @click="clickChild(child.key)">{{ child.text }}</a>
+            <a @click="clickMenu(child.key, 'child')">{{ child.text }}</a>
 
             <!-- 第三層 -->
             <ul v-if="menuActive.child == child.key" class="children">
               <li v-for="grandson in child.children" :key="grandson.key" :class="{ active: menuActive.grandson == grandson.key }">
-                <a @click="clickGrandson(grandson.key)">{{ grandson.text }}</a>
+                <a @click="clickMenu(grandson.key, 'grandson')">{{ grandson.text }}</a>
               </li>
             </ul>
 
